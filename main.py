@@ -1,6 +1,7 @@
 # coding: utf-8
-import re
+import os
 from requests import post
+from pathlib import Path
 import json
 import argparse
 import base64
@@ -37,7 +38,7 @@ def request_analyze(vision_url, iam_token, folder_id, image_data):
 
 
 def response_search(response_text, search_for_first_only=False):
-    search_result = set()
+    search_result = list()
     if isinstance(response_text, dict):
         for key in response_text:
             key_value = response_text[key]
@@ -45,25 +46,27 @@ def response_search(response_text, search_for_first_only=False):
                 if search_for_first_only:
                     return key_value
                 else:
-                    search_result.add(key_value)
+                    search_result += [key_value]
             if isinstance(key_value, dict) or isinstance(key_value, list) or isinstance(key_value, set):
                 _search_result = response_search(key_value, search_for_first_only)
                 if _search_result and search_for_first_only:
                     return _search_result
                 elif _search_result:
                     for result in _search_result:
-                        search_result.add(result)
+                        search_result += [result]
     elif isinstance(response_text, list) or isinstance(response_text, set):
         for element in response_text:
             if isinstance(element, list) or isinstance(element, set) or isinstance(element, dict):
-                _search_result = response_search(element, search_result)
+                _search_result = response_search(element, search_for_first_only)
                 if _search_result and search_for_first_only:
                     return _search_result
                 elif _search_result:
                     for result in _search_result:
-                        search_result.add(result)
+                        search_result += [result]
 
     return search_result if search_result else None
+
+
 #    print(type(response_text))
 #    for line in response_text:
 #       if re.search('text', line):
@@ -81,13 +84,32 @@ def main():
     vision_url = 'https://vision.api.cloud.yandex.net/vision/v1/batchAnalyze'
 
     iam_token = get_iam_token(iam_url, args.oauth_token)
-    with open(args.image_path, "rb") as f:
-        image_data = base64.b64encode(f.read()).decode('utf-8')
 
-    response_text = request_analyze(vision_url, iam_token, args.folder_id, image_data)
-#    jdata = json.loads(response_text)
-#    print(response_search(jdata))
-    print(response_text)
+    # создать новый текстовый файл
+    text_file = open("text.csv", "w")
+    directory = './'
+    files = Path(directory).glob('*.jpg')
+    for file in files:
+        print(file)
+#        with open(args.image_path, "rb") as f:
+        with open(file, "rb") as f:
+            image_data = base64.b64encode(f.read()).decode('utf-8')
+
+        response_text = request_analyze(vision_url, iam_token, args.folder_id, image_data)
+        jdata = json.loads(response_text)
+        snils_text=response_search(jdata)
+##    print(snils_text)
+##    7 8 10 11 12
+        snils = snils_text[7]+" "+snils_text[8]
+        second_name = snils_text[10]
+        fist_name = snils_text[11]
+        therd_name = snils_text[12]
+        # переименовать xxxx.jpg на фамилия_имя_отчество.jpg
+        os.rename(file, second_name+'_'+fist_name+'_'+therd_name+'.jpg')
+        text_file.write(second_name+','+fist_name+','+therd_name+','+snils+','+second_name+'_'+fist_name+'_'+therd_name+".jpg\n")
+        print(second_name+' '+fist_name+' '+therd_name+' - '+snils)
+##    print(response_text)
+##    print(jdata)
 
 
 #    print(args.oauth_token)
