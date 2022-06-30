@@ -1,4 +1,5 @@
 # coding: utf-8
+import re
 from requests import post
 import json
 import argparse
@@ -35,7 +36,18 @@ def request_analyze(vision_url, iam_token, folder_id, image_data):
     return response.text
 
 
-def main() -> object:
+def response_search(response_text):
+    search_result = set()
+    if isinstance(response_text, dict):
+        for key in response_text:
+            key_value = response_text[key]
+    print(type(response_text))
+#    for line in response_text:
+#       if re.search('text', line):
+#            print(line),
+
+
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--folder-id', required=True)
     parser.add_argument('--oauth-token', required=True)
@@ -50,14 +62,14 @@ def main() -> object:
         image_data = base64.b64encode(f.read()).decode('utf-8')
 
     response_text = request_analyze(vision_url, iam_token, args.folder_id, image_data)
-    print(response_text)
+    jdata = dict(response_text)
+    response_search(jdata)
+#    print(response_text)
 
 
 #    print(args.oauth_token)
 #    print(args.folder_id)
 #    print(args.image_path)
-
-#    print_hi('PyCharm')
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
