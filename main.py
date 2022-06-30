@@ -36,12 +36,35 @@ def request_analyze(vision_url, iam_token, folder_id, image_data):
     return response.text
 
 
-def response_search(response_text):
+def response_search(response_text, search_for_first_only=False):
     search_result = set()
     if isinstance(response_text, dict):
         for key in response_text:
             key_value = response_text[key]
-    print(type(response_text))
+            if key == "text":
+                if search_for_first_only:
+                    return key_value
+                else:
+                    search_result.add(key_value)
+            if isinstance(key_value, dict) or isinstance(key_value, list) or isinstance(key_value, set):
+                _search_result = response_search(key_value, search_for_first_only)
+                if _search_result and search_for_first_only:
+                    return _search_result
+                elif _search_result:
+                    for result in _search_result:
+                        search_result.add(result)
+    elif isinstance(response_text, list) or isinstance(response_text, set):
+        for element in response_text:
+            if isinstance(element, list) or isinstance(element, set) or isinstance(element, dict):
+                _search_result = response_search(element, search_result)
+                if _search_result and search_for_first_only:
+                    return _search_result
+                elif _search_result:
+                    for result in _search_result:
+                        search_result.add(result)
+
+    return search_result if search_result else None
+#    print(type(response_text))
 #    for line in response_text:
 #       if re.search('text', line):
 #            print(line),
@@ -62,9 +85,9 @@ def main():
         image_data = base64.b64encode(f.read()).decode('utf-8')
 
     response_text = request_analyze(vision_url, iam_token, args.folder_id, image_data)
-    jdata = dict(response_text)
-    response_search(jdata)
-#    print(response_text)
+#    jdata = json.loads(response_text)
+#    print(response_search(jdata))
+    print(response_text)
 
 
 #    print(args.oauth_token)
