@@ -96,19 +96,24 @@ def main():
             image_data = base64.b64encode(f.read()).decode('utf-8')
 
         response_text = request_analyze(vision_url, iam_token, args.folder_id, image_data)
-        jdata = json.loads(response_text)
-        snils_text=response_search(jdata)
-##    print(snils_text)
+        try:
+            jdata = json.loads(response_text)
+            snils_text=response_search(jdata)
+            snils = snils_text[7] + " " + snils_text[8]
+        except TypeError:
+            print("не распознался")
+        else:
+#    print(snils_text)
 ##    7 8 10 11 12
-        snils = snils_text[7]+" "+snils_text[8]
-        second_name = snils_text[10]
-        fist_name = snils_text[11]
-        therd_name = snils_text[12]
-        # переименовать xxxx.jpg на фамилия_имя_отчество.jpg
-        os.rename(file, second_name+'_'+fist_name+'_'+therd_name+'.jpg')
-        text_file.write(second_name+','+fist_name+','+therd_name+','+snils+','+second_name+'_'+fist_name+'_'+therd_name+".jpg\n")
-        print(second_name+' '+fist_name+' '+therd_name+' - '+snils)
-##    print(response_text)
+#            snils = snils_text[7]+" "+snils_text[8]
+            second_name = snils_text[10]
+            fist_name = snils_text[11]
+            therd_name = snils_text[12]
+            # переименовать xxxx.jpg на фамилия_имя_отчество.jpg
+            os.rename(file, second_name+'_'+fist_name+'_'+therd_name+'.jpg')
+            text_file.write(second_name+','+fist_name+','+therd_name+','+snils+','+second_name+'_'+fist_name+'_'+therd_name+".jpg\n")
+            print(second_name+' '+fist_name+' '+therd_name+' - '+snils)
+#    print(response_text)
 ##    print(jdata)
 
 
